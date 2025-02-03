@@ -11,14 +11,15 @@ app.use(express.json());
 app.use(cors());
 
 app.post('/fetch_students', (req, res) => {
-    const {emails} = req.body
-    exec(`python3 ./scripts/fetchStudentInfo.py "${emails}"`, 
+    const {students} = req.body
+    console.log(students)
+    exec(`python3 ./scripts/fetchStudentInfo.py "${JSON.stringify(students).replace(/"/g, '\\"')}"`, 
     (error, stdout, stderr) => {
         if (error){
             console.error(`exec error: ${error}`);
             return res.status(500).send(`Error: ${stderr}`);
         }
-        res.status(200).send(`Success!`);
+        res.status(200).send(`${stdout}`);
     });
 });
 

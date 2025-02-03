@@ -1,4 +1,4 @@
-const electricalEngineeringClasses = {
+const computerScienceClasses = {
     majorCourses : [
         "CPE/CSC-123",
         "CSC/CPE-101",
@@ -29,4 +29,4 @@ const electricalEngineeringClasses = {
         "STAT-312"
     ],
 }
-export default electricalEngineeringClasses
+export default computerScienceClasses

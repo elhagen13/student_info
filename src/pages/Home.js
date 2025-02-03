@@ -1,9 +1,11 @@
-import {Box, Button, Image, Text, Flex, Input, Menu, MenuButton, 
+import {Box, Button, Image, Text, Flex, Input, Menu,
     MenuList, MenuItem} from '@chakra-ui/react'
 import {useNavigate} from 'react-router-dom';
 import {useRef, useState} from 'react';
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import electricalEngineeringClasses from '../classLists/CS_2022-2026'
+//import electricalEngineeringClasses from '../classLists/CS_2022-2026'
+import electricalEngineeringClasses from '../classLists/EE_2022-2026'
+
 
 function Home(){
     const [classes, setClasses] = useState(electricalEngineeringClasses)
@@ -84,11 +86,11 @@ function Home(){
                         <Flex w='250px' flexDir='column' gap='5px'>
                             <Text ml='15px' fontWeight='bold' color='#888888' fontSize='14px'>type</Text>
                             <Menu>
-                                <MenuButton as={Button}  w='100%' h='40px' borderRadius='25px' bg='#F9F9F9'
+                                <Button w='100%' h='40px' borderRadius='25px' bg='#F9F9F9'
                                 boxShadow="0px 0px 7px rgba(0, 0, 0, 0.1)" rightIcon={<ChevronDownIcon/>}
                                 textAlign='left' color='#B6B6B6'>   
                                     {classType}  
-                                </MenuButton>
+                                </Button>
                                 <MenuList>
                                     <MenuItem onClick={() => setClassType('Major')}>Major</MenuItem>
                                     <MenuItem onClick={() => setClassType('Support')}>Support</MenuItem>
@@ -146,7 +148,7 @@ function Home(){
                     <Input w='100%' h='90%' bg='white' value={students} onChange={(event) => setStudents(event.target.value)}/>
                     <Button  bg='green' w='300px' borderRadius='50px' textColor='white' mt='20px'
                     padding='25px' boxShadow="0 0px 7px rgba(0, 0, 0, 0.7)" zIndex="2"
-                    _hover={{backgroundColor:'#489464'}} onClick={() => navigate('/fetch', {state: {students: students.split(",").map(item => item.trim()).filter(item => item !== ''), classes}})}>
+                    _hover={{backgroundColor:'#489464'}} onClick={() => navigate('/fetch', {state: {students: students.split(" ").map(item => item.trim()).filter(item => item !== ''), classes}})}>
                         Fetch Student Information
                     </Button>
                 </Flex>

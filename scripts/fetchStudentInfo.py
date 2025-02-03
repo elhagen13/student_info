@@ -10,15 +10,26 @@ import sys
 import json
 
 
-def navigateToStudentSearch(driver):
-    return
-
 def fetchStudents(driver, student_email):
     student_dict = {}
+    actions = ActionChains(driver)
 
     try:
-        #TODO: change this to other code where itll look each student up
-        driver.get('https://dashboards.calpoly.edu/dw/polydata/student_poly_profile_self_svc.display')
+        #TODO: change this to other code where itll look each student up        
+        driver.get("https://dashboards.calpoly.edu/dw/polydata/student_poly_profile.search")
+            
+        email_input = WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.XPATH, "//input[@id='p_username']"))
+        )
+        actions.move_to_element(email_input).click().send_keys(student_email[:-12]).perform()
+
+        search = WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, "//input[@type='submit']"))
+        )
+        search.click()
+
+        time.sleep(10)
+
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Personal Information')]"))
         )
@@ -43,10 +54,8 @@ def fetchStudents(driver, student_email):
         elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'First-Time Freshman')]")
         if elements:
             student_dict["FTF"] = True
-            print("First Time Freshman? True")
         else:
             student_dict["FTF"] = False
-            print("First Time Freshman? False")
 
         #-------------------------------------------------------------------------------
         #Academic Progress Stats:
@@ -57,7 +66,6 @@ def fetchStudents(driver, student_email):
         for row in rows:
             label = row.find_element(By.XPATH, "./td[1]").text.strip(":")
             value = row.find_element(By.XPATH, "./td[2]").text.split("(")[0].strip()
-            print(label, value)
             student_dict[label] = value
 
 
@@ -76,7 +84,6 @@ def fetchStudents(driver, student_email):
             session = href.split("#UGRD-")[-1]
             session_gpa = row.find_element(By.XPATH, ".//td[6]").text.strip()
             
-            print(session, session_gpa)
             student_dict[session] = session_gpa
 
         
@@ -87,7 +94,6 @@ def fetchStudents(driver, student_email):
         for session in session_tables:
             table = session.find_element(By.XPATH, "following::table[1]")
             rows = table.find_elements(By.XPATH, ".//tr[not(@class='row-shaded')]")
-            print(len(rows))
             for row in rows:
                 cols = row.find_elements(By.TAG_NAME, "td")
         
@@ -102,34 +108,31 @@ def fetchStudents(driver, student_email):
                     grade_points = cols[6].text
 
                     subject= "-".join(subject.split("-")[:-1])
-                    # Print or store the extracted data
-                    print(f"Subject: {subject}, Title: {title}, Grade: {grade}")
+            
                     student_dict[subject] = grade
         
         return student_dict
-        
-
     except Exception as e:
         print(f"Error: {e}")
 
     
 
 if __name__ == "__main__":
-    chrome_options = Options()
-    driver = webdriver.Chrome(options=chrome_options)
+    #chrome_options = Options()
+    #driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Firefox()
     #Go to CalPoly portal
     driver.get("https://myportal.calpoly.edu/")
     #This allows the user to login
-    time.sleep(60)
+    time.sleep(120)
     
     #navigateToStudentSearch(driver)
-
-    #students = sys.argv[1]
-    students = ['elhagen@calpoly.edu']
-    
+    students = json.loads(sys.argv[1])
+    print(students) 
     student_info_list = []
     
     for student in students:
+        print(student)
         student_info_list.append(fetchStudents(driver, student))
 
     # Define the file path for student_info.json
