@@ -21,7 +21,7 @@ function TablePage() {
     useEffect(() => {
         const terms = new Set();
         students.forEach(student => {
-            Object.keys(student).forEach(key => {
+            student && Object.keys(student).forEach(key => {
                 if (/^\d{4}$/.test(key)){
                     terms.add(key);
                 }
@@ -168,17 +168,17 @@ function TablePage() {
                         </Tr>
                     </Thead>
                     <Tbody>
-                        {students.map((student) => (
-                            <Tr key={student["Empl ID"]}>
-                                {itemsChecked[0] && <Td>{student["Name"]}</Td>}
-                                {itemsChecked[1] && <Td>{student["Email Address"]}</Td>}
-                                {itemsChecked[2] &&<Td>{student["Empl ID"]}</Td>}
-                                {itemsChecked[3] && <Td>{student["FTF"] ? "ftf" : "transfer"}</Td>}
-                                {itemsChecked[4] && <Td>{student["Expected Academic Progress (EAP)"]}</Td>}
-                                {itemsChecked[5] && <Td>{student["Actual Academic Progress"]}</Td>}
-                                {itemsChecked[6] && <Td>{student["Academic Standing"]}</Td>}
-                                {itemsChecked[7] && <Td>{student["Estimated Major GPA"]}</Td>}
-                                {itemsChecked[8] && terms?.map((term) => (
+                        {students?.map((student, index) => (
+                            <Tr key={index}>
+                                {student && itemsChecked[0] && <Td>{student["Name"]}</Td>}
+                                {student && itemsChecked[1] && <Td>{student["Email Address"]}</Td>}
+                                {student && itemsChecked[2] &&<Td>{student["Empl ID"]}</Td>}
+                                {student && itemsChecked[3] && <Td>{student["FTF"] ? "ftf" : "transfer"}</Td>}
+                                {student && itemsChecked[4] && <Td>{student["Expected Academic Progress (EAP)"]}</Td>}
+                                {student && itemsChecked[5] && <Td>{student["Actual Academic Progress"]}</Td>}
+                                {student && itemsChecked[6] && <Td>{student["Academic Standing"]}</Td>}
+                                {student && itemsChecked[7] && <Td>{student["Estimated Major GPA"]}</Td>}
+                                {student && itemsChecked[8] && terms?.map((term) => (
                                     <Td>{term in student ? student[term] : "N/A"}</Td>
                                 ))}
                                 {itemsChecked[9] && separatedClasses.majorCourses && separatedClasses.majorCourses.map((course) => {
