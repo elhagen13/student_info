@@ -1,15 +1,14 @@
 import { Box, Table, Thead, Tbody, Tr, Th, Td, Flex, Text, Checkbox, Select, Button} from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import data from '../student_info.json';
 import { useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
 
 function TablePage() {
     const location = useLocation();
-    const { classes } = location.state || {};
+    const { classes, studentInfoList } = location.state || {};
     const [separatedClasses, setSeparatedClasses] = useState({})
-    const [students, setStudents] = useState(data);
+    const [students, setStudents] = useState(studentInfoList);
     const [sortOption, setSortOption] = useState('');
     const [sortOrder, setSortOrder] = useState('');
     const items = ["Name", "Email", "Empl ID", "FTF", "Expected Academic Progress (EAP)", "Actual Academic Progress", "Academic Standing", "Estimated Major GPA", "Term GPAs", "Major Courses", "Support Courses"]
@@ -62,7 +61,7 @@ function TablePage() {
     }, [classes]);
 
     const updateFilters = () => {
-        let students = data;
+        let students = studentInfoList;
 
         if(!limitChecked[0]){
             students = [...students].filter((student) => !student.FTF)
@@ -148,6 +147,7 @@ function TablePage() {
                 <Table variant="simple" size="sm" overflow='scroll'>
                     <Thead>
                         <Tr style={{ whiteSpace: 'nowrap' }}>
+                            <Th>Index</Th>
                             {itemsChecked[0] && <Th>Name</Th>}
                             {itemsChecked[1] && <Th>Email Address</Th>}
                             {itemsChecked[2] && <Th>EmplID</Th>}
@@ -170,6 +170,7 @@ function TablePage() {
                     <Tbody>
                         {students?.map((student, index) => (
                             <Tr key={index}>
+                                <Td>{index}</Td>
                                 {student && itemsChecked[0] && <Td>{student["Name"]}</Td>}
                                 {student && itemsChecked[1] && <Td>{student["Email Address"]}</Td>}
                                 {student && itemsChecked[2] &&<Td>{student["Empl ID"]}</Td>}

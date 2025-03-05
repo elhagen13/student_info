@@ -1,4 +1,5 @@
 const { Builder, By, Key, until } = require('selenium-webdriver');
+const chrome = require('selenium-webdriver/chrome');
 const fs = require('fs');
 const path = require('path');
 
@@ -6,17 +7,20 @@ async function fetchStudents(driver, studentEmail) {
     let studentDict = {};
 
     try {
-        // Navigate to the student profile search page
-        await driver.get("https://dashboards.calpoly.edu/dw/polydata/student_poly_profile.search");
+        await driver.sleep(20000);
 
+        // Navigate to the student profile search page
+        //await driver.get("https://dashboards.calpoly.edu/dw/polydata/student_poly_profile.search");
+        await driver.get("https://dashboards.calpoly.edu/dw/polydata/student_poly_profile_self_svc.display")
         // Wait for the email input field and enter student email (without @calpoly.edu)
+        /*
         let emailInput = await driver.wait(until.elementLocated(By.xpath("//input[@id='p_username']")), 30000);
         await emailInput.sendKeys(studentEmail.replace("@calpoly.edu", ""), Key.RETURN);
 
         // Wait for search button and click it
         let searchButton = await driver.wait(until.elementLocated(By.xpath("//input[@type='submit']")), 30000);
         await searchButton.click();
-
+        */
         // Wait for the Personal Information section to appear
         await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Personal Information')]")), 10000);
 
@@ -89,17 +93,73 @@ async function fetchStudents(driver, studentEmail) {
     }
 }
 
-async function fetchStudentInfo(students) {
-    let driver = await new Builder().forBrowser("firefox").build();
+async function fetchStudentInfo(students, username, password) {
+
+    let options = new chrome.Options();
+    options.addArguments('--headless'); // Enable headless mode
+    options.addArguments('--disable-gpu'); // Disable GPU (recommended for headless)
+    options.addArguments('--no-sandbox'); // Bypass OS security model (recommended for CI/CD)
+    
+    // Build the WebDriver with Chrome options
+    let driver = await new Builder()
+        .forBrowser('chrome')
+        .setChromeOptions(options) // Pass the Chrome options
+        .build();
+        await driver.get("https://myportal.calpoly.edu/");
+
 
     try {
-        // Go to the Cal Poly portal (user logs in manually)
-        await driver.get("https://myportal.calpoly.edu/");
-        console.log("Please log in manually...");
-        await new Promise(resolve => setTimeout(resolve, 120000)); // Wait 2 minutes for manual login
+        // Locate and interact with the username field
+        const usernameField = await driver.wait(
+            until.elementLocated(By.id("username")),
+            10000
+        );
+        await driver.wait(until.elementIsVisible(usernameField), 5000);
+        await usernameField.sendKeys(username);
+        console.log("username")
 
-        console.log("students", students)
-        console.log("Students to fetch:", students);
+        // Small delay to prevent issues
+        await driver.sleep(500);
+
+        // Locate and interact with the password field
+        const passwordField = await driver.wait(
+            until.elementLocated(By.id("password")),
+            10000
+        );
+        await driver.wait(until.elementIsVisible(passwordField), 5000);
+        await passwordField.sendKeys(password);
+        console.log("password")
+        // Locate and click the submit button
+        const submitButton = await driver.findElement(By.name("_eventId_proceed"));
+        await submitButton.click();
+        console.log("submit")
+
+        //Check to see if email/password is correct, will return if not
+        try{
+            const incorrect = await driver.wait(
+                until.elementLocated(By.xpath("//*[contains(text(), 'The username or password you entered was incorrect.')]")), 
+                1000)
+            if(incorrect){
+                console.log("incorrect password");
+                throw new Error("Incorrect username or password")
+            }
+            
+        }
+        catch(error){
+            if(error.name === 'TimeoutError'){
+                
+            }
+            else{
+                throw new Error(error.message)
+            }  
+        }
+        
+        //The user now needs to wait for duo
+        const duoButton = await driver.wait(
+            until.elementLocated(By.xpath("//*[contains(text(), 'Yes, this is my device')]")),
+            50000
+        );
+        await duoButton.click();
 
         let studentInfoList = [];
         for (const student of students) {
@@ -107,15 +167,23 @@ async function fetchStudentInfo(students) {
             let studentData = await fetchStudents(driver, student);
             if (studentData) studentInfoList.push(studentData);
         }
+        console.log(studentInfoList)
 
         // Save to JSON file
         const filePath = path.join(__dirname, "student_info.json");
         fs.writeFileSync(filePath, JSON.stringify(studentInfoList, null, 2));
         console.log("Data saved to", filePath);
-    } finally {
+        return studentInfoList;
+    } 
+    catch(error){
+        throw error;
+    }
+    finally {
         await driver.quit();
     }
 }
 
 // Export both functions together as one object
 module.exports = { fetchStudentInfo, fetchStudents };
+
+fetchStudentInfo(["elhagen@calpoly.edu"], "elhagen@calpoly.edu", "CalPolyPassword:)")

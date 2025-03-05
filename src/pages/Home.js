@@ -1,5 +1,5 @@
-import {Box, Button, Image, Text, Flex, Input, Menu,
-    MenuList, MenuItem} from '@chakra-ui/react'
+import {Box, Button, Image, Text, Flex, Input, Menu,MenuButton,
+    MenuList, MenuItem, useToast} from '@chakra-ui/react'
 import {useNavigate} from 'react-router-dom';
 import {useRef, useState} from 'react';
 import { ChevronDownIcon } from "@chakra-ui/icons";
@@ -7,7 +7,10 @@ import { ChevronDownIcon } from "@chakra-ui/icons";
 import electricalEngineeringClasses from '../classLists/EE_2022-2026'
 
 
+
 function Home(){
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [classes, setClasses] = useState(electricalEngineeringClasses)
     const [classType, setClassType] = useState("Major")
     const [newClass, setNewClass] = useState("")
@@ -16,6 +19,7 @@ function Home(){
     const secondBoxRef = useRef(null);
     const thirdBoxRef = useRef(null)
     const navigate = useNavigate();
+    const toast = useToast()
 
     const handleScroll = (box) => {
         box.current?.scrollIntoView({behavior: 'smooth'})
@@ -41,6 +45,7 @@ function Home(){
                 return updatedCourses;
             });
         }
+        console.log(classes)
     }
 
     const deleteCourse = () => {
@@ -57,6 +62,19 @@ function Home(){
         setSelectedClasses([])
     };
 
+    const isValidSubmit = () => {
+        if(username === "" || password === ""){
+            toast({
+                title: "Error",
+                description: "CalPoly email and password fields incomplete",
+                status: "error",
+                duration: 2500,
+                isClosable: true,
+              });
+            return false
+        }
+        return true
+    }
 
     return (
         <Box>
@@ -67,9 +85,16 @@ function Home(){
                     fontWeight='bold'>
                         Student Information <br/> Web Scraper
                     </Text>
-                    <Button  bg='green' borderRadius='50px' textColor='white' m='40px'
+                    <Box display='flex' gap='20px' mt='50px'>
+                        <Input bg='rgba(255, 255, 255, 0.7)' borderRadius='20px' placeholder='CalPoly Email'
+                        value={username} onChange={(e) => setUsername(e.target.value)}/>
+                        <Input bg='rgba(255, 255, 255, 0.7)' borderRadius='20px' placeholder='CalPoly Password'
+                        value={password} onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </Box>
+                    <Button  bg='green' borderRadius='50px' textColor='white' mt='40px'
                     padding='25px' boxShadow="0 0px 7px rgba(255, 255, 255, 0.7)" zIndex="2"
-                    _hover={{backgroundColor:'#489464'}} onClick={() => handleScroll(secondBoxRef)}>
+                    _hover={{backgroundColor:'#489464'}} onClick={() => {isValidSubmit() && handleScroll(secondBoxRef)}}>
                         Get Started →
                     </Button>
                 </Box>
@@ -86,11 +111,11 @@ function Home(){
                         <Flex w='250px' flexDir='column' gap='5px'>
                             <Text ml='15px' fontWeight='bold' color='#888888' fontSize='14px'>type</Text>
                             <Menu>
-                                <Button w='100%' h='40px' borderRadius='25px' bg='#F9F9F9'
+                                <MenuButton w='100%' h='40px' borderRadius='25px' bg='#F9F9F9'
                                 boxShadow="0px 0px 7px rgba(0, 0, 0, 0.1)" rightIcon={<ChevronDownIcon/>}
-                                textAlign='left' color='#B6B6B6'>   
+                                textAlign='left' color='#B6B6B6' p='20px'>   
                                     {classType}  
-                                </Button>
+                                </MenuButton>
                                 <MenuList>
                                     <MenuItem onClick={() => setClassType('Major')}>Major</MenuItem>
                                     <MenuItem onClick={() => setClassType('Support')}>Support</MenuItem>
@@ -148,7 +173,7 @@ function Home(){
                     <Input w='100%' h='90%' bg='white' value={students} onChange={(event) => setStudents(event.target.value)}/>
                     <Button  bg='green' w='300px' borderRadius='50px' textColor='white' mt='20px'
                     padding='25px' boxShadow="0 0px 7px rgba(0, 0, 0, 0.7)" zIndex="2"
-                    _hover={{backgroundColor:'#489464'}} onClick={() => navigate('/fetch', {state: {students: students.split(" ").map(item => item.trim()).filter(item => item !== ''), classes}})}>
+                    _hover={{backgroundColor:'#489464'}} onClick={() => navigate('/fetch', {state: {students: students.split(" ").map(item => item.trim()).filter(item => item !== ''), classes, username, password}})}>
                         Fetch Student Information
                     </Button>
                 </Flex>
