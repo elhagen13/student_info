@@ -34,7 +34,7 @@ function Fetching() {
           }
 
           // Step 2: Fetch student data
-          const response = await fetch('http://54.161.75.178:3000/fetch_students', {
+          const response = await fetch('https://54.161.75.178:3000/fetch_students', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
