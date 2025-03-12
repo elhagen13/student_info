@@ -2,8 +2,6 @@ import { Spinner, Flex, Text, useToast } from '@chakra-ui/react';
 import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {useNavigate} from 'react-router-dom';
-const https = require('https');
-const fetch = require('node-fetch');
 
 function Fetching() {
     const location = useLocation();
@@ -12,9 +10,6 @@ function Fetching() {
     const navigate = useNavigate();   
     const toast = useToast();
 
-    const agent = new https.Agent({
-      rejectUnauthorized: false, 
-    });
 
     useEffect(() => {
         if (!hasRun) {
@@ -39,15 +34,14 @@ function Fetching() {
             setTimeout(() => navigate('/'), 10000);
             return; // Stop further execution
           }
-
+          console.log("Step 1 complete, initiating step 2...")
           // Step 2: Fetch student data
-          const response = await fetch('https://54.161.75.178/fetch_students', {
+          const response = await fetch('/api/fetch_students', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ students, username, password }),
-            agent,
           });
 
           if (response.status === 200) {
