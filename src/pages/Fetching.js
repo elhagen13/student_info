@@ -2,6 +2,8 @@ import { Spinner, Flex, Text, useToast } from '@chakra-ui/react';
 import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {useNavigate} from 'react-router-dom';
+const https = require('https');
+const fetch = require('node-fetch');
 
 function Fetching() {
     const location = useLocation();
@@ -9,6 +11,11 @@ function Fetching() {
     const [hasRun, setHasRun] = useState(false);
     const navigate = useNavigate();   
     const toast = useToast();
+
+    const agent = new https.Agent({
+      rejectUnauthorized: false, 
+    });
+
     useEffect(() => {
         if (!hasRun) {
             const generateClassList = async () => {
@@ -40,6 +47,7 @@ function Fetching() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ students, username, password }),
+            agent,
           });
 
           if (response.status === 200) {
