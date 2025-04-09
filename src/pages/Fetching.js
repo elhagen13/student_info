@@ -1,98 +1,85 @@
 import { Spinner, Flex, Text, useToast } from '@chakra-ui/react';
 import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Fetching() {
     const location = useLocation();
     const { students, classes, username, password } = location.state || {};
-    const [hasRun, setHasRun] = useState(false);
-    const navigate = useNavigate();   
+    const [status, setStatus] = useState('Starting process...');
+    const [progress, setProgress] = useState('');
+    const navigate = useNavigate();
     const toast = useToast();
 
-
     useEffect(() => {
-        if (!hasRun) {
-            const generateClassList = async () => {
-                setHasRun(true);
-
-        try {
-          // Step 1: Start the server
-          const startServer = await fetch('https://e6femuacp8.execute-api.us-east-1.amazonaws.com/StartStudentInfoInstance', {
-            method: 'GET',
-          });
-
-          if (!startServer.ok) {
-            const errorMessage = await startServer.text();
-            toast({
-              title: 'Error',
-              description: errorMessage,
-              status: 'error',
-              duration: 2500,
-              isClosable: true,
-            });
-            setTimeout(() => navigate('/'), 10000);
-            return; // Stop further execution
+      const startProcess = async () => {
+          try {
+            /*
+              // Step 1: Start the server
+              setStatus('Starting server instance...');
+              const startServer = await fetch('https://e6femuacp8.execute-api.us-east-1.amazonaws.com/StartStudentInfoInstance');
+  
+              if (!startServer.ok) {
+                  throw new Error(await startServer.text());
+              }*/
+  
+              // Step 2: Connect to SSE stream
+              setStatus('Connecting to student data stream...');
+              const eventSource = new EventSource(`http://54.161.75.178:3000/api/fetch_students?students=${encodeURIComponent(JSON.stringify(students))}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+  
+              eventSource.onmessage = (event) => {
+                  try {
+                      const data = JSON.parse(event.data);
+                      
+                      if (data.status) {
+                          // Handle status updates
+                          setStatus(data.status);
+                      } else if (data.students) {
+                          // Final data received
+                          navigate('/table', { state: { classes, studentInfoList: data.students } });
+                          eventSource.close();
+                      }
+                  } catch (e) {
+                      console.error('Error parsing event data:', e);
+                  }
+              };
+  
+              eventSource.addEventListener('error', (error) => {
+                  console.error('EventSource error:', error);
+                  toast({
+                      title: 'Connection Error',
+                      description: 'Failed to maintain connection with server',
+                      status: 'error',
+                      duration: 5000,
+                      isClosable: true,
+                  });
+                  eventSource.close();
+                  navigate('/');
+              });
+  
+              eventSource.addEventListener('complete', () => {
+                  eventSource.close();
+              });
+  
+              return () => {
+                  eventSource.close();
+              };
+  
+          } catch (error) {
+              console.error('Initialization error:', error);
+              toast({
+                  title: 'Error',
+                  description: error.message,
+                  status: 'error',
+                  duration: 5000,
+                  isClosable: true,
+              });
+              navigate('/');
           }
-          console.log("Step 1 complete, initiating step 2...")
-          // Step 2: Fetch student data
-          const response = await fetch('/api/fetch_students', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ students, username, password }),
-          });
-
-          if (response.status === 200) {
-            const studentInfoList = await response.json();
-            console.log(studentInfoList);
-            navigate('/table', { state: { classes, studentInfoList } });
-          } else if (response.status === 500) {
-            const errorMessage = await response.text();
-            toast({
-              title: 'Error',
-              description: errorMessage,
-              status: 'error',
-              duration: 2500,
-              isClosable: true,
-            });
-            setTimeout(() => navigate('/'), 10000);
-          }
-
-          // Step 3: Stop the server
-          const stopServer = await fetch('https://by12xxb7o5.execute-api.us-east-1.amazonaws.com/StopStudentInfoInstance', {
-            method: 'GET',
-          });
-
-          if (!stopServer.ok) {
-            const errorMessage = await stopServer.text();
-            toast({
-              title: 'Error',
-              description: errorMessage,
-              status: 'error',
-              duration: 2500,
-              isClosable: true,
-            });
-            setTimeout(() => navigate('/'), 10000);
-          }
-        } catch (error) {
-          console.error('Fetch Error:', error);
-          toast({
-            title: 'Network Error',
-            description: 'Failed to connect to the server. Please try again later.',
-            status: 'error',
-            duration: 2500,
-            isClosable: true,
-          });
-          setTimeout(() => navigate('/'), 10000);
-        }
       };
-
-            generateClassList();
-        }
-    }, [hasRun]); 
-
+  
+      startProcess();
+  }, []);
     return (
         <Flex
             width="100vw"
@@ -104,9 +91,24 @@ function Fetching() {
             bg="#EDECE9"
         >
             <Text fontFamily="Inter" fontWeight="bold" fontSize="40px">
-                FETCHING STUDENTS...
+                FETCHING STUDENT DATA
             </Text>
-            <Spinner boxSize="100px" borderWidth="10px" speed="1s" emptyColor="#B5B4B0" />
+            <Text fontSize="xl" mb={4}>
+                {status}
+            </Text>
+            {progress && (
+                <Text fontSize="lg" color="gray.600">
+                    Progress: {progress}
+                </Text>
+            )}
+            <Spinner 
+                boxSize="100px" 
+                borderWidth="10px" 
+                speed="1s" 
+                emptyColor="#B5B4B0" 
+                color="#3182CE" 
+                thickness="10px"
+            />
         </Flex>
     );
 }

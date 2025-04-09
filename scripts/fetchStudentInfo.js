@@ -96,7 +96,7 @@ async function fetchStudents(driver, studentEmail) {
 async function fetchStudentInfo(students, username, password) {
 
     let options = new chrome.Options();
-    options.addArguments('--headless'); // Enable headless mode
+    //options.addArguments('--headless'); // Enable headless mode
     options.addArguments('--disable-gpu'); // Disable GPU (recommended for headless)
     options.addArguments('--no-sandbox'); // Bypass OS security model (recommended for CI/CD)
     
