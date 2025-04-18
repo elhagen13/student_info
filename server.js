@@ -1,28 +1,46 @@
 const express = require('express');
-const {exec} = require('child_process');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-const {fetchStudentInfo} = require('./scripts/fetchStudentInfo')
+const { fetchStudentInfo } = require('./scripts/fetchStudentInfo');
 
 const app = express();
-const port = 3001;
+const port = 3000;
 
-app.use(express.json());
+app.use(cors());
 
+app.get('/api/fetch_students', async (req, res) => {
+  const { students, username, password } = req.query;
 
-app.post('/fetch_students', async (req, res) => {
-  const {students, username, password} = req.body
-  
-   try{
-    const studentInfoList = await fetchStudentInfo(students, username, password);
-    res.status(200).json(studentInfoList)
-   }
-   catch(error){
-    res.status(500).send(`Error: ${error.message}`);
-   }
+  // Set SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders(); // Send headers immediately
+
+  try {
+    const studentList = JSON.parse(students);
+    
+    // Assuming fetchStudentInfo is now a generator function that yields progress
+    const studentInfoGenerator = fetchStudentInfo(studentList, username, password);
+    
+    for await (const update of studentInfoGenerator) {
+      // Send each yielded update as an SSE event
+      res.write(`data: ${JSON.stringify(update)}\n\n`);
+      
+      // Manually flush if available
+      if (typeof res.flush === 'function') {
+        res.flush();
+      }
+    }
+    
+    // Final completion message
+    res.write('data: [DONE]\n\n');
+  } catch (error) {
+    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+  } finally {
+    res.end();
+  }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`)
-})
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running at http://:${port}/`);
+});
