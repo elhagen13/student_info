@@ -25,9 +25,13 @@ function Fetching() {
   
               // Step 2: Connect to SSE stream
               setStatus('Connecting to student data stream...');
-              const eventSource = new EventSource(`http://54.161.75.178:3000/api/fetch_students?students=${encodeURIComponent(JSON.stringify(students))}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+              const eventSource = new EventSource(`http://ec2-54-161-75-178.compute-1.amazonaws.com:3000/api/fetch_students?students=${encodeURIComponent(JSON.stringify(students))}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
   
               eventSource.onmessage = (event) => {
+                  if(event.data === '[DONE]'){
+                    eventSource.close();
+                    return;
+                  }
                   try {
                       const data = JSON.parse(event.data);
                       
